@@ -2,7 +2,7 @@
 
 **Claude Code builds. Codex verifies. Pi decides. A person only judges.**
 
-This repository runs a legacy Python 2 → Python 3 migration two ways and lets
+This repository runs an example legacy Python 2 → Python 3 migration two ways and lets
 you compare them on your own machine:
 
 - **Current plan:** one headless Claude Code session migrates the app and
@@ -12,9 +12,7 @@ you compare them on your own machine:
   the result, and a small deterministic lifecycle hosted by Pi decides what
   happens next. People are asked only when a rule can't decide.
 
-It is the companion to the O'Reilly Radar article *Harnesses, Plural*
-[link once published]. The point is not a score race: on a small app, one good
-session can pass every test. The point is what you can control in each
+This repo demonstrates what you can control in each
 harness, what isolation buys you, and what evidence exists afterwards.
 
 ```mermaid
@@ -30,7 +28,7 @@ flowchart TB
   Pi -- case file --> H -- decision --> Pi
 ```
 
-Claude and Codex never talk to each other. Every handoff goes through Pi,
+Important: Claude and Codex never talk to each other. Every handoff goes through Pi,
 which checks what comes back (against git, against frozen checks) before
 anything moves on.
 
@@ -54,8 +52,8 @@ anything moves on.
 
 ## Run it
 
-You need an Ubuntu 24.04 machine with **16 GB of RAM** (a DigitalOcean droplet
-with 8 vCPU / 16 GB works well), a Claude subscription or API key, and a
+You need an Ubuntu 24.04 machine with **16 GB of RAM** (I used a DigitalOcean droplet
+with 8 vCPU / 16 GB), a Claude subscription or API key, and a
 ChatGPT subscription or OpenAI API key for Codex.
 
 ```bash
@@ -86,7 +84,7 @@ tools/score.sh suggested-1
 The current plan takes minutes; the suggested plan takes one to a few hours,
 unattended. Times on the machine are UTC.
 
-### Already have a machine with Claude Code and Codex?
+### If you already have a machine (cloud-based server) with Claude Code and Codex?
 
 You don't need a new machine per project, just as you don't reinstall your
 agents on your laptop for every repository. If the machine already has the
