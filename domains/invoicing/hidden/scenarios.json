@@ -1,0 +1,247 @@
+[
+ {
+  "id": "cli-list-all-p1",
+  "kind": "cli",
+  "steps": [
+   [
+    "list",
+    "{data}",
+    "",
+    "1"
+   ]
+  ]
+ },
+ {
+  "id": "cli-list-p3",
+  "kind": "cli",
+  "steps": [
+   [
+    "list",
+    "{data}",
+    "",
+    "3"
+   ]
+  ]
+ },
+ {
+  "id": "cli-list-beyond-last-page",
+  "kind": "cli",
+  "steps": [
+   [
+    "list",
+    "{data}",
+    "",
+    "9"
+   ]
+  ]
+ },
+ {
+  "id": "cli-list-umlaut",
+  "kind": "cli",
+  "steps": [
+   [
+    "list",
+    "{data}",
+    "Bäckerei"
+   ]
+  ]
+ },
+ {
+  "id": "cli-list-folded",
+  "kind": "cli",
+  "steps": [
+   [
+    "list",
+    "{data}",
+    "geneve"
+   ]
+  ]
+ },
+ {
+  "id": "cli-list-line-text",
+  "kind": "cli",
+  "steps": [
+   [
+    "list",
+    "{data}",
+    "gebäck"
+   ]
+  ]
+ },
+ {
+  "id": "cli-show-c02",
+  "kind": "cli",
+  "steps": [
+   [
+    "show",
+    "{data}",
+    "INV-2025-102"
+   ]
+  ]
+ },
+ {
+  "id": "cli-show-c05",
+  "kind": "cli",
+  "steps": [
+   [
+    "show",
+    "{data}",
+    "INV-2026-014"
+   ]
+  ]
+ },
+ {
+  "id": "cli-show-on-receipt",
+  "kind": "cli",
+  "steps": [
+   [
+    "show",
+    "{data}",
+    "INV-2025-104"
+   ]
+  ]
+ },
+ {
+  "id": "cli-show-c06",
+  "kind": "cli",
+  "steps": [
+   [
+    "show",
+    "{data}",
+    "INV-2026-015"
+   ]
+  ]
+ },
+ {
+  "id": "cli-customer-c02",
+  "kind": "cli",
+  "steps": [
+   [
+    "customer",
+    "{data}",
+    "C02"
+   ]
+  ]
+ },
+ {
+  "id": "cli-customer-c03",
+  "kind": "cli",
+  "steps": [
+   [
+    "customer",
+    "{data}",
+    "C03"
+   ]
+  ]
+ },
+ {
+  "id": "cli-aging-close",
+  "kind": "cli",
+  "steps": [
+   [
+    "aging",
+    "{data}"
+   ]
+  ]
+ },
+ {
+  "id": "cli-aging-march",
+  "kind": "cli",
+  "steps": [
+   [
+    "aging",
+    "{data}",
+    "2026-03-31"
+   ]
+  ]
+ },
+ {
+  "id": "cli-stats",
+  "kind": "cli",
+  "steps": [
+   [
+    "stats",
+    "{data}"
+   ]
+  ]
+ },
+ {
+  "id": "cli-installments",
+  "kind": "cli",
+  "steps": [
+   [
+    "installments",
+    "{data}",
+    "INV-2026-004",
+    "4"
+   ]
+  ]
+ },
+ {
+  "id": "cli-export-file",
+  "kind": "cli",
+  "steps": [
+   [
+    "export",
+    "{data}",
+    "{tmp}/ledger.csv"
+   ]
+  ],
+  "collect": [
+   "ledger.csv"
+  ]
+ },
+ {
+  "id": "cli-pay-roundtrip",
+  "kind": "cli",
+  "steps": [
+   [
+    "pay",
+    "{data}",
+    "INV-2026-012",
+    "1234,50",
+    "2026-07-05"
+   ],
+   [
+    "show",
+    "{data}",
+    "INV-2026-012"
+   ]
+  ]
+ },
+ {
+  "id": "http-list-umlaut",
+  "kind": "http",
+  "path": "/?q=Z%C3%BCrich"
+ },
+ {
+  "id": "http-list-page-2",
+  "kind": "http",
+  "path": "/?q=&page=2"
+ },
+ {
+  "id": "http-invoice-c03",
+  "kind": "http",
+  "path": "/invoice/INV-2025-109"
+ },
+ {
+  "id": "http-invoice-escaping",
+  "kind": "http",
+  "path": "/invoice/INV-2026-015"
+ },
+ {
+  "id": "http-customer-c02",
+  "kind": "http",
+  "path": "/customer/C02"
+ },
+ {
+  "id": "http-aging",
+  "kind": "http",
+  "path": "/aging"
+ },
+ {
+  "id": "http-ledger",
+  "kind": "http",
+  "path": "/ledger.csv"
+ }
+]

@@ -1,0 +1,20 @@
+{
+  "name": "harnesses-plural-harness",
+  "version": "1.0.0",
+  "description": "Pi lifecycle core and adapters for Claude Code (builder), Codex (verifier) and frozen acceptance",
+  "scripts": {
+    "sim": "node sim/simulate.ts",
+    "check": "tsc -p .",
+    "e2e": "node test/e2e.ts"
+  },
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "typebox": "^1.3.36"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3",
+    "@playwright/test": "1.56.1"
+  }
+}

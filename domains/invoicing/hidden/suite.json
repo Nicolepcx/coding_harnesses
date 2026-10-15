@@ -1,0 +1,5 @@
+{
+  "cliModule": "inv_cli",
+  "webModule": "inv_web",
+  "dataFile": "data/ledger.fs"
+}

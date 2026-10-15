@@ -1,0 +1,45 @@
+{
+  "name": "invoicing",
+  "unitId": "invoicing-app",
+  "title": "Invoicing (Python 2 back office)",
+  "copy": [
+    "src",
+    "tests",
+    "data",
+    "DEPENDENCIES.csv"
+  ],
+  "dataFile": "data/ledger.fs",
+  "modules": {
+    "cli": "inv_cli",
+    "web": "inv_web",
+    "store": "inv_store"
+  },
+  "storeOpen": "open_root",
+  "storeWrite": [
+    [
+      "pay",
+      "{data}",
+      "INV-2026-012",
+      "1234,50",
+      "2026-07-05"
+    ]
+  ],
+  "writeCommands": [
+    "pay",
+    "seed"
+  ],
+  "riskPatterns": {
+    "persistentClasses": "class \\w+\\(Persistent\\)",
+    "pickleCalls": "cPickle|pickle\\.",
+    "encodingHotspots": "\\.encode\\(|\\.decode\\(|unicode\\(|cp1252|utf-8"
+  },
+  "constraints": [
+    "Migrate, do not improve: no refactoring beyond what the port needs.",
+    "One codebase, dual-compatible: everything runs on python2.7 and python3.12; no Py3-only syntax.",
+    "The legacy build on Python 2.7 defines correct behavior: output, ordering, rounding, encodings, errors.",
+    "data/ledger.fs was written by Python 2 and must stay readable; the legacy build must still read what the port writes, with the same types.",
+    "The ledger CSV is imported every night by the accounting software: columns, order, separator, encoding and line endings must not change.",
+    "Never change a test's expected values to make it pass; report the difference instead."
+  ],
+  "currentPlanPrompt": "Migrate this Python 2.7 codebase so that one codebase runs on both Python 2.7 and Python 3.12 (dual-compatible). Behavior must stay exactly the same, including: reading the existing data file data/ledger.fs that was written by Python 2 (and the old build must still be able to read what the new one writes), and the ledger CSV export that the accounting software imports every night. Use the commands python2.7 and python3.12. Run the tests in tests/ on both versions, port the tests too, and try the CLI (PYTHONPATH=src python -m inv_cli COMMAND data/ledger.fs ...) and the web app (PYTHONPATH=src python -m inv_web data/ledger.fs PORT). When you are done, summarize what you changed and how you verified it."
+}
