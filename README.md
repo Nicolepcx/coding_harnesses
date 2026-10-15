@@ -1,4 +1,4 @@
-# Harnesses, plural
+# Coding Harnesses
 
 **Claude Code builds. Codex verifies. Pi decides. A person only judges.**
 
@@ -47,19 +47,19 @@ anything moves on.
 | `harness/checks/` | Differential and persistence checks, Playwright runner |
 | `harness/pi/migrate.ts` | The Pi extension: `/migrate`, `/migrate-status`, `/migrate-decide` |
 | `harness/config/policy.ts` | The policy: severity floors, budgets, timeouts, required checks per risk |
-| `tools/` | Start, status, decide, score, smoke test, Python 2.7 build |
+| `tools/` | Start, watch, status, replay, decide, score, smoke test, Python 2.7 build |
 | `deploy/bootstrap.sh` | Sets up an Ubuntu 24.04 machine |
 
 ## Run it
 
-You need an Ubuntu 24.04 machine with **16 GB of RAM** (I used a DigitalOcean droplet
-with 8 vCPU / 16 GB), a Claude subscription or API key, and a
+You need an Ubuntu 24.04 machine with **16 GB of RAM** (a DigitalOcean droplet
+with 8 vCPU / 16 GB works well), a Claude subscription or API key, and a
 ChatGPT subscription or OpenAI API key for Codex.
 
 ```bash
 # 1. As root on the machine
-git clone https://github.com/<you>/harnesses-plural /opt/harnesses-plural
-bash /opt/harnesses-plural/deploy/bootstrap.sh 2>&1 | tee /var/log/harness-bootstrap.log
+git clone https://github.com/Nicolepcx/coding_harnesses /opt/coding_harnesses
+bash /opt/coding_harnesses/deploy/bootstrap.sh 2>&1 | tee /var/log/harness-bootstrap.log
 #    ends with "smoke test (invoicing): ... Score: 25/25" and "done"
 
 # 2. Log both agents in as the harness user (once)
@@ -67,15 +67,17 @@ sudo -iu harness claude                       # then /login, then exit
 sudo -iu harness codex login --device-auth
 
 # 3. Two-minute check: logins, sandbox, hooks, structured output
-sudo -iu harness bash /opt/harnesses-plural/tools/smoke_agents.sh    # "Both agents ready."
+sudo -iu harness bash /opt/coding_harnesses/tools/smoke_agents.sh    # "Both agents ready."
 
 # 4. Start both plans (as root; each runs as harness inside a 12 GB budget)
-cd /opt/harnesses-plural
+cd /opt/coding_harnesses
 tools/start.sh current   current-1
 tools/start.sh suggested suggested-1
 
 # 5. Follow, decide when asked, score
-tools/status.sh suggested-1          # step, active agent, memory, "WAITING FOR YOU"
+tools/watch.sh current-1 suggested-1 # live view: step, what each agent just did, memory, "WAITING FOR YOU"
+tools/status.sh suggested-1          # the same, once
+python3 tools/replay.py suggested-1   # afterwards or when something looks wrong: every step, tool call, subagent and blocked command, in order
 tools/decide.sh /srv/runs/suggested-1
 tools/score.sh current-1
 tools/score.sh suggested-1
@@ -84,7 +86,7 @@ tools/score.sh suggested-1
 The current plan takes minutes; the suggested plan takes one to a few hours,
 unattended. Times on the machine are UTC.
 
-### If you already have a machine (cloud-based server) with Claude Code and Codex?
+### Already have a machine with Claude Code and Codex?
 
 You don't need a new machine per project, just as you don't reinstall your
 agents on your laptop for every repository. If the machine already has the
@@ -95,23 +97,23 @@ add this repository with four steps as root:
 
 ```bash
 # 1. Clone and install the harness's Node packages
-git clone https://github.com/<you>/harnesses-plural /opt/harnesses-plural
-cd /opt/harnesses-plural/harness && npm ci --no-audit --no-fund && cd ..
+git clone https://github.com/Nicolepcx/coding_harnesses /opt/coding_harnesses
+cd /opt/coding_harnesses/harness && npm ci --no-audit --no-fund && cd ..
 #    No Chromium for Playwright 1.56.1 yet? (cd harness && PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npx playwright install --with-deps chromium && chmod -R a+rX /opt/pw-browsers)
 
 # 2. Hidden suite to the judge, repository read-only
 mkdir -p /opt/judge/invoicing && mv domains/invoicing/hidden /opt/judge/invoicing/hidden
-chown -R root:root /opt/harnesses-plural && chmod -R a+rX,go-w /opt/harnesses-plural
+chown -R root:root /opt/coding_harnesses && chmod -R a+rX,go-w /opt/coding_harnesses
 chown -R judge:judge /opt/judge/invoicing && chmod -R go-rwx /opt/judge/invoicing
 mkdir -p /srv/runs && chown harness:harness /srv/runs
 
 # 3. Record the expected outputs on Python 2.7; the legacy app must score 25/25
-R=/opt/judge/invoicing/hidden/runner.py APP=/opt/harnesses-plural/domains/invoicing/app
+R=/opt/judge/invoicing/hidden/runner.py APP=/opt/coding_harnesses/domains/invoicing/app
 sudo -u judge python3 $R record --python /usr/local/bin/python2.7 --app $APP
 sudo -u judge python3 $R score  --python /usr/local/bin/python2.7 --app $APP
 
 # 4. Check the agents, then continue with step 4 above
-sudo -iu harness bash /opt/harnesses-plural/tools/smoke_agents.sh
+sudo -iu harness bash /opt/coding_harnesses/tools/smoke_agents.sh
 ```
 
 Nothing here touches other projects on the machine: runs live in their own
@@ -188,7 +190,7 @@ That run also exposed weaknesses in the harness, which this version fixes:
 | A false "oscillation": Codex renumbers findings every run | Findings are compared by content (category and files), not by ID |
 | The person's case file didn't list the findings | It lists every blocking finding with status, evidence and files |
 | Every behavior difference blocked, so the verifiers never ran out of edge cases | Behavior differences now block when the verifier rates them high; persistence always blocks |
-| Silent 40-minute steps | `tools/status.sh` shows the step, the active agent and memory |
+| Silent 40-minute steps | `tools/watch.sh` shows the step, each agent's last tool calls (from its own transcript) and memory |
 
 And one lesson became a frozen check: the persistence check now asks whether
 the **legacy** build still reads what the port wrote, *with the same Python 2
@@ -208,7 +210,7 @@ A domain is a folder under `domains/`:
 | `playwright/` | Optional frozen browser specs |
 | `hidden/` | Optional scoreboard: `runner.py`, `scenarios.json`, `suite.json` |
 
-Run with `HARNESS_DOMAIN=/opt/harnesses-plural/domains/<name>`. The harness
+Run with `HARNESS_DOMAIN=/opt/coding_harnesses/domains/<name>`. The harness
 assumes a Python 2 → dual-compatible migration with a CLI and a store; other
 migrations need their own checks in `harness/checks/`.
 
