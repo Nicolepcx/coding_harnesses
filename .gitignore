@@ -1,0 +1,8 @@
+node_modules/
+*.pyc
+__pycache__/
+test-results/
+results.json
+# The hidden suite's expected outputs are recorded on the judge's machine only.
+domains/*/hidden/golden/
+domains/*/hidden/fixture/

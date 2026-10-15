@@ -1,7 +1,7 @@
 /**
  * Pi front end for the migration harness.
  *
- *   pi --extension /opt/harnesses-plural/harness/pi/migrate.ts
+ *   pi --extension /opt/coding_harnesses/harness/pi/migrate.ts
  *
  *   /migrate RUN_DIR        start (or resume) the unit in the background, 24/7
  *   /migrate-status         where the unit is: node, trace, runs, repairs, cost

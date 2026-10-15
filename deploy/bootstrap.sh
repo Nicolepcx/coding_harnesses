@@ -2,8 +2,8 @@
 # Sets up an Ubuntu 24.04 machine (a DigitalOcean droplet with 16 GB works well)
 # to run both plans. Run as root from the repository, wherever it is:
 #
-#   git clone https://github.com/<you>/harnesses-plural /opt/harnesses-plural
-#   bash /opt/harnesses-plural/deploy/bootstrap.sh 2>&1 | tee /var/log/harness-bootstrap.log
+#   git clone https://github.com/Nicolepcx/coding_harnesses /opt/coding_harnesses
+#   bash /opt/coding_harnesses/deploy/bootstrap.sh 2>&1 | tee /var/log/harness-bootstrap.log
 #
 # Safe to run again: every step checks what already exists.
 #
