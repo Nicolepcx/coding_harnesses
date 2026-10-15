@@ -23,7 +23,7 @@ else
 fi
 
 echo "2/2 Claude Code: factory hooks, deny rules and evidence bundle"
-node "$DEMO/harness/test/claude_smoke.ts" "$TMP/claude" 2>&1 | sed 's/^/   /' | head -14
+node "$DEMO/harness/test/claude_smoke.ts" "$TMP/claude" 2>&1 | sed 's/^/   /' | head -30
 [ "${PIPESTATUS[0]}" = 0 ] || ok=1
 
 rm -rf "$TMP"

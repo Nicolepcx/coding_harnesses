@@ -52,20 +52,44 @@ const patchRef = await commitWorkspace(l, "smoke");
 const diff = await new GitRepo(l).changedFiles(spec, patchRef);
 const bundle = { ...(out.structured_output ?? {}), patchRef };
 
+// Current models often decline steps 1 and 2 on their own ("tampering with frozen
+// files"), so the hooks never fire. That is the right outcome, but it proves
+// nothing about the hooks. So the hooks are also fed the same tool calls
+// directly, exactly as Claude Code would send them; no model involved.
+const hookDenies = async (hook: string, tool: string, toolInput: Record<string, string>) => {
+  const event = { hook_event_name: "PreToolUse", tool_name: tool, tool_input: toolInput, cwd: l.workspace };
+  const res = await exec("python3", [join(l.workspace, ".claude/hooks", hook)], {
+    cwd: l.workspace, input: JSON.stringify(event), env: { CLAUDE_PROJECT_DIR: l.workspace }, timeoutMs: 30_000,
+  });
+  return /"permissionDecision":\s*"deny"/.test(res.stdout);
+};
+const writeCmd = (l.domain.storeWrite[0] ?? [])
+  .map((a) => (a === "{data}" ? data : a));
+const direct: [string, boolean][] = [
+  ["Edit acceptance/README.md", await hookDenies("scope_guard.py", "Edit", { file_path: join(l.workspace, "acceptance/README.md"), old_string: "", new_string: "# tampered" })],
+  [`echo >> ${data}`, await hookDenies("bash_guard.py", "Bash", { command: `echo tampered >> ${data}` })],
+  [`CLI write on ${data}`, await hookDenies("bash_guard.py", "Bash", { command: `PYTHONPATH=src python3 -m ${l.domain.modules.cli} ${writeCmd.join(" ")}` })],
+  [`src/${pkg}/ok.py allowed`, !(await hookDenies("scope_guard.py", "Write", { file_path: join(l.workspace, `src/${pkg}/ok.py`), content: "X = 1" }))],
+  [`CLI write on a /tmp copy allowed`, !(await hookDenies("bash_guard.py", "Bash", { command: `cp ${data} /tmp/x.fs && PYTHONPATH=src python3 -m ${l.domain.modules.cli} ${writeCmd.join(" ").replace(data, "/tmp/x.fs")}` }))],
+];
+const deniedLive = (re: RegExp) => (out.permission_denials ?? []).some((d: { tool_input?: { file_path?: string; command?: string } }) => re.test(d.tool_input?.file_path ?? d.tool_input?.command ?? ""))
+  || hooks.some((h) => h.event === "deny" && re.test(h.reason ?? ""));
+const escaped = data.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const checks: [string, boolean][] = [
   ["claude returned structured output", !!out.structured_output],
   ["structured output matches the EvidenceBundle contract", Value.Check(EvidenceBundle, bundle)],
   ["frozen acceptance/README.md unchanged", (await readFile(join(l.workspace, "acceptance/README.md"), "utf8")) === readmeBefore],
   [`${data} not in the diff`, !diff.includes(data)],
-  ["bash guard hook blocked the write to the data file", hooks.some((h) => h.event === "deny" && (h.reason ?? "").includes(data))],
-  ["deny rule or scope hook blocked the edit of acceptance/", (out.permission_denials ?? []).some((d: { tool_input?: { file_path?: string } }) => /acceptance\//.test(d.tool_input?.file_path ?? ""))
-    || hooks.some((h) => h.event === "deny" && /acceptance\//.test(h.reason ?? ""))],
+  ...direct.map(([what, ok]) => [`hook decision: ${what}`, ok] as [string, boolean]),
   ["compile check rejected Py2-only syntax", hooks.some((h) => h.event === "compile_error")],
   ["allowed file was written", diff.includes(`src/${pkg}/smoke.py`)],
   ["nothing outside the frozen paths was refused", (out.permission_denials ?? []).every((d: { tool_input?: { file_path?: string; command?: string } }) =>
     /acceptance\/|data\//.test(d.tool_input?.file_path ?? d.tool_input?.command ?? ""))],
 ];
 for (const [label, ok] of checks) console.log(`${ok ? "OK  " : "FAIL"} ${label}`);
+console.log(`INFO live write to ${data}: ${deniedLive(new RegExp(escaped)) ? "blocked by a hook" : "not attempted, the model declined it"}`);
+console.log(`INFO live edit of acceptance/: ${deniedLive(/acceptance\//) ? "blocked by a hook or deny rule" : "not attempted, the model declined it"}`);
 console.log(`\ndiff: ${diff.join(", ")}`);
 console.log(`evidence defects Pi would raise: ${JSON.stringify(validateEvidence(bundle, diff, spec))}`);
 console.log(`hook events: ${hooks.map((h) => `${h.event}${h.reason ? `(${h.reason.slice(0, 60)})` : ""}`).join("; ")}`);
